@@ -141,6 +141,12 @@ load("@android_test_support//:repo.bzl", "android_test_repositories")
 
 android_test_repositories()
 
+# other dependencies.
+local_repository(
+    name = "tvmbackend",
+    path = "mobile_back_tvm",
+)
+
 http_archive(
     name = "build_bazel_rules_apple",
     sha256 = "9f9eb6cdd25d7932cb939df24807c2d70772aad7a79f1357e25ced9d0d443cfd",

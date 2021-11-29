@@ -201,6 +201,7 @@ int32_t mlperf_backend_get_input_count(mlperf_backend_ptr_t backend_ptr) {
   if (backend_data->isTflite_) {
     return tflite_backend_get_input_count(backend_data->tfliteBackend_);
   }
+  LOG(INFO) << "Input Count:" << backend_data->inputFormat_.size();
   return backend_data->inputFormat_.size();
 }
 
@@ -245,6 +246,7 @@ int32_t mlperf_backend_get_output_count(mlperf_backend_ptr_t backend_ptr) {
   if (backend_data->isTflite_) {
     return tflite_backend_get_output_count(backend_data->tfliteBackend_);
   }
+  LOG(INFO) << "Outout Count:" << backend_data->outputFormat_.size();
   return backend_data->outputFormat_.size();
 }
 // Return the type of ith output.
@@ -312,6 +314,7 @@ mlperf_status_t mlperf_backend_get_output(mlperf_backend_ptr_t backend_ptr,
 }
 
 void *mlperf_backend_get_buffer(size_t n) {
+  LOG(INFO) << "Get Buffer :" << n;
   return backend_data_->getBuffer_(n);
 }
 

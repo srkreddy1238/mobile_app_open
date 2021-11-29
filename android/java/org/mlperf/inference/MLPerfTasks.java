@@ -142,7 +142,11 @@ public final class MLPerfTasks {
   }
 
   public static String getCacheDir() {
-    return AppConstants.CACHE_DIR;
+    String localDir =
+       MLCtx.getInstance().getContext().getFilesDir().getAbsolutePath();
+    return localDir + "/cache/";
+
+    //return AppConstants.CACHE_DIR;
   }
 
   // Update the results.json file.

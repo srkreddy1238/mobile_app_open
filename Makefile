@@ -24,6 +24,7 @@ all: app
 include mobile_back_tflite/tflite_backend.mk
 include mobile_back_pixel/pixel_backend.mk
 include mobile_back_qti/make/qti_backend.mk
+include mobile_back_tvm/make/tvm_backend.mk
 
 
 output/mlperf_mobile_docker_1_0.stamp: android/docker/mlperf_mobile/Dockerfile
@@ -39,6 +40,7 @@ COMMON_DOCKER_FLAGS1= \
 		-v $(CURDIR):/home/mlperf/mobile_app \
 		-v $(CURDIR)/output/home/mlperf/cache:/home/mlperf/cache \
                 ${QTI_VOLUMES} \
+                ${TVM_VOLUMES} \
 		-w /home/mlperf/mobile_app \
                 -u `id -u`:`id -g` \
 		mlcommons/mlperf_mobile:1.0 bazel-3.7.2
@@ -68,16 +70,17 @@ proto_test: output/mlperf_mobile_docker_1_0.stamp
 	@cp output/`readlink bazel-bin`/android/cpp/proto/proto_test output/proto_test
 	@chmod 777 output/proto_test
 
-main: output/mlperf_mobile_docker_1_0.stamp ${QTI_DEPS}
+main: output/mlperf_mobile_docker_1_0.stamp ${QTI_DEPS} ${TVM_DEPS}
 	@echo "Building main"
 	@mkdir -p output/home/mlperf/cache && chmod 777 output/home/mlperf/cache
 	@docker run \
 		${COMMON_DOCKER_FLAGS} \
-		--config android_arm64 //mobile_back_tflite:tflitebackend ${QTI_TARGET} //android/cpp/binary:main
+		--config android_arm64 //mobile_back_tflite:tflitebackend ${QTI_TARGET} ${TVM_TARGET} //android/cpp/binary:main
 	@rm -rf output/binary && mkdir -p output/binary
 	@cp output/`readlink bazel-bin`/android/cpp/binary/main output/binary/main
 	@cp output/`readlink bazel-bin`/mobile_back_tflite/cpp/backend_tflite/libtflitebackend.so output/binary/libtflitebackend.so
 	@${QTI_LIB_COPY}
+	@${TVM_LIB_COPY}
 	@chmod 777 output/binary/main output/binary/libtflitebackend.so
 
 libtflite: output/mlperf_mobile_docker_1_0.stamp
@@ -91,12 +94,12 @@ libtflite: output/mlperf_mobile_docker_1_0.stamp
 	@chmod 777 output/binary/libtflitebackend.so
 	
 
-app: output/mlperf_mobile_docker_1_0.stamp ${QTI_DEPS}
+app: output/mlperf_mobile_docker_1_0.stamp ${QTI_DEPS} ${TVM_DEPS}
 	@echo "Building mlperf_app.apk"
 	@mkdir -p output/home/mlperf/cache && chmod 777 output/home/mlperf/cache
 	@docker run \
 		${COMMON_DOCKER_FLAGS} \
-                ${QTI_BACKEND} ${SAMSUNG_BACKEND} ${MEDIATEK_BACKEND} ${PIXEL_BACKEND} \
+                ${QTI_BACKEND} ${TVM_BACKEND} ${SAMSUNG_BACKEND} ${MEDIATEK_BACKEND} ${PIXEL_BACKEND} \
 		--fat_apk_cpu=arm64-v8a \
 		//android/java/org/mlperf/inference:mlperf_app
 	@cp output/`readlink bazel-bin`/android/java/org/mlperf/inference/mlperf_app.apk output/mlperf_app.apk
@@ -107,7 +110,7 @@ app_x86_64: output/mlperf_mobile_docker_1_0.stamp
 	@mkdir -p output/home/mlperf/cache && chmod 777 output/home/mlperf/cache
 	@docker run \
 		${COMMON_DOCKER_FLAGS} \
-                ${QTI_BACKEND} ${SAMSUNG_BACKEND} ${MEDIATEK_BACKEND} ${PIXEL_BACKEND} \
+                ${QTI_BACKEND} ${TVM_BACKEND} ${SAMSUNG_BACKEND} ${MEDIATEK_BACKEND} ${PIXEL_BACKEND} \
 		--fat_apk_cpu=x86_64 \
 		//android/java/org/mlperf/inference:mlperf_app
 	@cp output/`readlink bazel-bin`/android/java/org/mlperf/inference/mlperf_app.apk output/mlperf_app_x86_64.apk
@@ -118,7 +121,7 @@ test_app: output/mlperf_mobile_docker_1_0.stamp
 	@mkdir -p output/home/mlperf/cache && chmod 777 output/home/mlperf/cache
 	@docker run \
 		${COMMON_DOCKER_FLAGS} \
-                ${QTI_BACKEND} ${SAMSUNG_BACKEND} ${MEDIATEK_BACKEND} ${PIXEL_BACKEND} \
+                ${QTI_BACKEND} ${TVM_BACKEND} ${SAMSUNG_BACKEND} ${MEDIATEK_BACKEND} ${PIXEL_BACKEND} \
 		--fat_apk_cpu=x86_64,arm64-v8a \
 		//androidTest:mlperf_test_app
 	@cp output/`readlink bazel-bin`/android/androidTest/mlperf_test_app.apk output/mlperf_test_app.apk
@@ -149,4 +152,7 @@ ifeq (${WITH_QTI},1)
   include mobile_back_qti/make/qti_backend_targets.mk
 endif
 
+ifeq (${WITH_TVM},1)
+  include mobile_back_tvm/make/tvm_backend_targets.mk
+endif
 

@@ -35,6 +35,18 @@ config_setting(
 )
 
 string_flag(
+    name = "with_tvm",
+    build_setting_default = "0",
+)
+
+config_setting(
+    name = "use_tvm",
+    flag_values = {
+        ":with_tvm": "1",
+    },
+)
+
+string_flag(
     name = "with_samsung",
     build_setting_default = "0",
 )
@@ -90,6 +102,9 @@ genrule(
           }) + select({
         ":use_qti": "| sed -e 's/QTI/\"qti\",/' ",
         "//conditions:default": "| sed -e 's/QTI//' ",
+    }) + select({
+        ":use_tvm": "| sed -e 's/TVM/\"tvm\",/' ",
+        "//conditions:default": "| sed -e 's/TVM//'",
     }) + select({
         ":use_samsung": "| sed -e 's/SAMSUNG/\"samsung\",/' ",
         "//conditions:default": "| sed -e 's/SAMSUNG//'",
@@ -169,6 +184,9 @@ android_binary(
         "//android/commonlibs:commonlibs",
     ] + select({
         ":use_qti": ["//mobile_back_qti:qtibackend"],
+        "//conditions:default": [],
+    }) + select({
+        ":use_tvm": ["//mobile_back_tvm:tvmbackend"],
         "//conditions:default": [],
     }) + select({
         ":use_samsung": ["//mobile_back_samsung:samsungbackend"],
