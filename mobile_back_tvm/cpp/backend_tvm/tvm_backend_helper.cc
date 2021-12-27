@@ -90,12 +90,12 @@ int TVMBackendHelper::tvm_config_model(const char *model_path) {
   return 0;
 }
 
-size_t TVMBackendHelper::get_data_size(const DLTensor& arr) {
+size_t TVMBackendHelper::get_data_size(const DLTensor& arr, int& dtypeSize) {
   size_t size = 1;
   for (tvm_index_t i = 0; i < arr.ndim; ++i) {
     size *= static_cast<size_t>(arr.shape[i]);
   }
-  size *= (arr.dtype.bits * arr.dtype.lanes + 7) / 8;
+  dtypeSize = (arr.dtype.bits * arr.dtype.lanes + 7) / 8;
   return size;
 }
 
@@ -103,14 +103,14 @@ size_t TVMBackendHelper::get_data_size(const DLTensor& arr) {
 void TVMBackendHelper::get_data_formats() {
   int num_inputs = mod_.GetFunction("get_num_inputs")();
   int num_outputs = mod_.GetFunction("get_num_outputs")();
-
+  int dtypeSize = 1;
   LOG(INFO) << "Num Inputs:" << num_inputs;
   LOG(INFO) << "Num Outputs:" << num_outputs;
 
   DLTensor* x;
   tvm::runtime::PackedFunc get_input = mod_.GetFunction("get_input");
   x = get_input(0);
-  int bufSize = get_data_size(*x);
+  int bufSize = get_data_size(*x, dtypeSize);
   input_format_.push_back(
       {mlperf_data_t::Type::Float32, bufSize});
   LOG(INFO) << "Input Size:" << bufSize;
@@ -121,12 +121,12 @@ void TVMBackendHelper::get_data_formats() {
   for (int i=0;i<num_outputs;++i) {
     tvm::runtime::PackedFunc get_output = mod_.GetFunction("get_output");
     y = get_output(i);
-    bufSize = get_data_size(*y);
+    bufSize = get_data_size(*y, dtypeSize);
     LOG(INFO) << "Output Size: " << i << " :" << bufSize;
     output_format_.push_back(
         {mlperf_data_t::Type::Float32, bufSize});
     dl_outputs.push_back(y);
 
-    dl_cpu_outputs.push_back(malloc(get_data_size(*y)));
+    dl_cpu_outputs.push_back(malloc(bufSize*dtypeSize));
   }
 }
