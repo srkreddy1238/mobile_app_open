@@ -50,7 +50,7 @@ class TVMBackendHelper {
 
   int tvm_config_model(const char *model_path);
   void get_data_formats();
-  size_t get_data_size(const DLTensor& arr);
+  size_t get_data_size(const DLTensor& arr, int& dtypeSize);
 };
 
 

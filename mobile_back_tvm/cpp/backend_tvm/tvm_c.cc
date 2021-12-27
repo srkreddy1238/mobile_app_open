@@ -138,7 +138,9 @@ mlperf_status_t mlperf_backend_set_input(mlperf_backend_ptr_t backend_ptr,
                                          void *data) {
   TVMBackendHelper *backend_data = (TVMBackendHelper *)backend_ptr;
   LOG(WARNING) << "Called: mlperf_backend_set_input:" << batchIndex << " i:" << i;
-  TVMArrayCopyFromBytes(backend_data->dl_inputs[i], data, backend_data->get_data_size(*backend_data->dl_inputs[i]));
+  int dtypeSize = 1;
+  int bufsize = backend_data->get_data_size(*backend_data->dl_inputs[i], dtypeSize);
+  TVMArrayCopyFromBytes(backend_data->dl_inputs[i], data, dtypeSize*bufsize);
   LOG(WARNING) << "Called: mlperf_backend_set_input: Completed";
   return MLPERF_SUCCESS;
 }
@@ -165,8 +167,10 @@ mlperf_status_t mlperf_backend_get_output(mlperf_backend_ptr_t backend_ptr,
   TVMBackendHelper *backend_data = (TVMBackendHelper *)backend_ptr;
 
   LOG(WARNING) << "Called: mlperf_backend_get_output: TVM Copy call";
+  int dtypeSize = 1;
+  int bufsize = backend_data->get_data_size(*backend_data->dl_outputs[i], dtypeSize);
   TVMArrayCopyToBytes(backend_data->dl_outputs[i], backend_data->dl_cpu_outputs[i],
-      backend_data->get_data_size(*backend_data->dl_inputs[i]));
+      dtypeSize*bufsize);
   LOG(WARNING) << "Called: mlperf_backend_get_output: TVM Copy Completed";
   *data = backend_data->dl_cpu_outputs[i];
   LOG(WARNING) << "Called: mlperf_backend_get_output: Returning";
