@@ -35,9 +35,9 @@ static void process_config(const mlperf_backend_configuration_t *configs,
   if (runtime == "CPU")
   {
     backend_data->device_ = kDLCPU;
-  } else if (runtime == "GPU") {
+/*} else if (runtime == "GPU") {
     backend_data->device_ = kDLGPU;
-/*  } else if (runtime == "CUDA") {
+  } else if (runtime == "CUDA") {
     backend_data->device_ = kDLCUDA;
   } else if (runtime == "CUDAHost") {
     backend_data->device_ = kDLCUDAHost;*/
@@ -56,7 +56,6 @@ static void process_config(const mlperf_backend_configuration_t *configs,
   } else {
     LOG(FATAL) << "Error: Unsupported runtime: " << runtime;
   }
-
   // Batch size is zero if not specified
   backend_data->batchSize_ =
       (configs->batch_size == 0) ? 1 : configs->batch_size;

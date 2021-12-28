@@ -76,8 +76,8 @@ int TVMBackendHelper::tvm_config_model(const char *model_path) {
   /* Get global function module for graph runtime */
   LOG(INFO) << "TVM Backend Helper: Create Runtime";
   mod_ =
-    //(*tvm::runtime::Registry::Get("tvm.graph_executor.create"))(json_data,
-    (*tvm::runtime::Registry::Get("tvm.graph_runtime.create"))(json_data,
+    (*tvm::runtime::Registry::Get("tvm.graph_executor.create"))(json_data,
+    //(*tvm::runtime::Registry::Get("tvm.graph_runtime.create"))(json_data,
                                                                 mod_dylib,
                                                                 device_type,
                                                                 device_id);
