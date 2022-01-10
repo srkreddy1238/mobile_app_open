@@ -35,12 +35,15 @@ static void process_config(const mlperf_backend_configuration_t *configs,
   if (runtime == "CPU")
   {
     backend_data->device_ = kDLCPU;
-/*} else if (runtime == "GPU") {
+#if  DLPACK_VERSION == 020
+  } else if (runtime == "GPU") {
     backend_data->device_ = kDLGPU;
+#else
   } else if (runtime == "CUDA") {
     backend_data->device_ = kDLCUDA;
   } else if (runtime == "CUDAHost") {
-    backend_data->device_ = kDLCUDAHost;*/
+    backend_data->device_ = kDLCUDAHost;
+#endif
   } else if (runtime == "OpenCL") {
     backend_data->device_ = kDLOpenCL;
   } else if (runtime == "Vulkan") {

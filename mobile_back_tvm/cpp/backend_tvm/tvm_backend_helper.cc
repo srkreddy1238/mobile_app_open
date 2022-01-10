@@ -75,13 +75,23 @@ int TVMBackendHelper::tvm_config_model(const char *model_path) {
 
   /* Get global function module for graph runtime */
   LOG(INFO) << "TVM Backend Helper: Create Runtime";
-  mod_ =
-    (*tvm::runtime::Registry::Get("tvm.graph_executor.create"))(json_data,
-    //(*tvm::runtime::Registry::Get("tvm.graph_runtime.create"))(json_data,
+  auto runtime_create =  tvm::runtime::Registry::Get("tvm.graph_runtime.create");
+  if(runtime_create != NULL){
+  LOG(INFO) << "TVM Backend Helper: running with graph runtime";
+  mod_ = (*tvm::runtime::Registry::Get("tvm.graph_runtime.create"))(json_data,
                                                                 mod_dylib,
                                                                 device_type,
                                                                 device_id);
-  /* Load Params */
+  }  else {
+  LOG(INFO) << "TVM Backend Helper: running with executor";
+  mod_ =
+    (*tvm::runtime::Registry::Get("tvm.graph_executor.create"))(json_data,
+                                                                mod_dylib,
+                                                                device_type,
+                                                                device_id);
+  }
+
+ /* Load Params */
   LOG(INFO) << "TVM Backend Helper: Load Params";
   tvm::runtime::PackedFunc load_params = mod_.GetFunction("load_params");
   load_params(params_arr);
