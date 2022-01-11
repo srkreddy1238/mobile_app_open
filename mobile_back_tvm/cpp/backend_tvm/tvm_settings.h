@@ -65,6 +65,15 @@ benchmark_setting {
   configuration: "TVM"
   src: "https://github.com/srkreddy1238/mobile_models/raw/tvm/v1_1/tvm/adreno-opencl/model_ic.zip"
 
-})SETTINGS";
+}
+
+benchmark_setting {
+  benchmark_id: "IS_uint8"
+  accelerator: "OpenCL"
+  accelerator_desc: "TVM OpenCl Backend"
+  configuration: "TVM"
+  src: "https://github.com/srkreddy1238/mobile_models/raw/tvm/v1_1/tvm/adreno-opencl/model_is.zip"
+}
+)SETTINGS";
 
 #endif
