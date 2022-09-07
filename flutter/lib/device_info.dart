@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 import 'package:device_info/device_info.dart';
+import 'package:device_marketing_names/device_marketing_names.dart';
+import 'package:ios_utsname_ext/extension.dart';
 import 'package:mlperfbench_common/data/environment/environment_info.dart';
 import 'package:mlperfbench_common/data/environment/os_enum.dart';
 
@@ -55,17 +57,18 @@ class DeviceInfo {
       manufacturer: 'Apple',
       brand: 'Apple',
       modelCode: iosInfo.utsname.machine,
-      modelName: '',
+      modelName: iosInfo.utsname.machine.iOSProductName,
     );
   }
 
   static Future<DeviceInfo> _makeAndroidInfo() async {
     final deviceInfo = await DeviceInfoPlugin().androidInfo;
+    final deviceNames = DeviceMarketingNames();
     return DeviceInfo(
       manufacturer: deviceInfo.manufacturer,
       brand: deviceInfo.brand,
       modelCode: deviceInfo.model,
-      modelName: '',
+      modelName: await deviceNames.getSingleName(),
     );
   }
 
