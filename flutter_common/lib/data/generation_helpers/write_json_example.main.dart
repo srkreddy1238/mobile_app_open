@@ -100,7 +100,7 @@ Future<void> main() async {
       officialReleaseFlag: false,
     ),
     envInfo: EnvironmentInfo(
-      manufacturer: 'unknown',
+      brand: 'unknown',
       model: 'unknown',
       osName: OsName.fromJson('windows'),
       osVersion: '10.0',

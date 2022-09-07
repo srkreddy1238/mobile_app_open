@@ -78,7 +78,7 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "manufacturer": {
+                "brand": {
                     "type": "string"
                 },
                 "model": {
@@ -92,7 +92,7 @@
                 }
             },
             "required": [
-                "manufacturer",
+                "brand",
                 "model",
                 "os_name",
                 "os_version"

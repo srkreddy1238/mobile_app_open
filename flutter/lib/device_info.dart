@@ -7,15 +7,17 @@ import 'package:mlperfbench_common/data/environment/environment_info.dart';
 import 'package:mlperfbench_common/data/environment/os_enum.dart';
 
 class DeviceInfo {
+  final String manufacturer;
+  final String brand;
   final String modelCode;
   final String modelName;
-  final String manufacturer;
 
   static late final String nativeLibraryPath;
   static late final DeviceInfo instance;
 
   DeviceInfo({
     required this.manufacturer,
+    required this.brand,
     required this.modelCode,
     required this.modelName,
   });
@@ -51,6 +53,7 @@ class DeviceInfo {
 
     return DeviceInfo(
       manufacturer: 'Apple',
+      brand: 'Apple',
       modelCode: iosInfo.utsname.machine,
       modelName: '',
     );
@@ -60,6 +63,7 @@ class DeviceInfo {
     final deviceInfo = await DeviceInfoPlugin().androidInfo;
     return DeviceInfo(
       manufacturer: deviceInfo.manufacturer,
+      brand: deviceInfo.brand,
       modelCode: deviceInfo.model,
       modelName: '',
     );
@@ -67,9 +71,10 @@ class DeviceInfo {
 
   static Future<DeviceInfo> _makeWindowsInfo() async {
     return DeviceInfo(
-      manufacturer: 'Microsoft',
+      manufacturer: 'Unknown',
+      brand: 'Unknown',
       modelCode: 'Unknown PC',
-      modelName: '',
+      modelName: 'Unknown PC',
     );
   }
 
@@ -77,7 +82,7 @@ class DeviceInfo {
     return EnvironmentInfo(
       osName: OsName.fromJson(Platform.operatingSystem),
       osVersion: Platform.operatingSystemVersion,
-      manufacturer: DeviceInfo.instance.manufacturer,
+      brand: DeviceInfo.instance.brand,
       model: DeviceInfo.instance.modelCode,
     );
   }

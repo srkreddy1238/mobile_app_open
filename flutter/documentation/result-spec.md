@@ -121,7 +121,7 @@ Info about environment the app is running in. May change when you update your OS
   * `windows`
 * `os_version`: string  
   Must be obtained from environment
-* `manufacturer`: string. Manufacturer of the device  
+* `brand`: string. Manufacturer/brand of the device  
   On Windows systems value must be `Unknown`.  
   On iOS systems value must be `Apple`.  
   On Android systems value must represent actual manufacturer name obtained from system environment.
