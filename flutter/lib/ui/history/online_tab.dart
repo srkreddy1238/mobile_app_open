@@ -114,7 +114,7 @@ class OnlineTab implements TabInterface {
       title: helper.formatDate(startDatetime.toLocal()),
       specialTitleColor: results.list.any(
           (runRes) => !(runRes.performance?.loadgenInfo?.validity ?? false)),
-      subtitle: item.envInfo.modelCode,
+      subtitle: item.envInfo.modelName,
       onTap: () {
         Navigator.push(
           context,
