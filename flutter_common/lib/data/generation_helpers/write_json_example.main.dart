@@ -101,7 +101,8 @@ Future<void> main() async {
     ),
     envInfo: EnvironmentInfo(
       brand: 'unknown',
-      model: 'unknown',
+      modelCode: 'Unknown PC',
+      modelName: 'Unknown PC',
       osName: OsName.fromJson('windows'),
       osVersion: '10.0',
     ),
