@@ -113,38 +113,42 @@ final _getDatasetSize = getBridgeHandle()
 
 RunResult runBenchmark(RunSettings rs) {
   var runIn = malloc.allocate<_RunIn>(sizeOf<_RunIn>());
-  runIn.ref.set(rs);
+  try {
+    runIn.ref.set(rs);
 
-  final startTime = DateTime.now();
+    final startTime = DateTime.now();
 
-  var runOut = _run(runIn);
+    var runOut = _run(runIn);
 
-  runIn.ref.free();
-  malloc.free(runIn);
+    try {
+      if (runOut.address == 0) {
+        throw '$_runName result: nullptr';
+      }
+      if (runOut.ref.ok != 1) {
+        throw '$_runName result: runOut.ref.ok != 1';
+      }
 
-  if (runOut.address == 0) {
-    throw '$_runName result: nullptr';
+      var res = RunResult(
+        accuracyNormalized: runOut.ref.accuracyNormalized,
+        accuracyFormatted: runOut.ref.accuracyFormatted.toDartString(),
+        accuracyNormalized2: runOut.ref.accuracyNormalized2,
+        accuracyFormatted2: runOut.ref.accuracyFormatted2.toDartString(),
+        numSamples: runOut.ref.num_samples,
+        durationMs: runOut.ref.duration_ms,
+        backendName: runOut.ref.backend_name.toDartString(),
+        backendVendor: runOut.ref.backend_vendor.toDartString(),
+        acceleratorName: runOut.ref.accelerator_name.toDartString(),
+        startTime: startTime,
+      );
+
+      return res;
+    } finally {
+      _free(runOut);
+    }
+  } finally {
+    runIn.ref.free();
+    malloc.free(runIn);
   }
-  if (runOut.ref.ok != 1) {
-    throw '$_runName result: runOut.ref.ok != 1';
-  }
-
-  var res = RunResult(
-    accuracyNormalized: runOut.ref.accuracyNormalized,
-    accuracyFormatted: runOut.ref.accuracyFormatted.toDartString(),
-    accuracyNormalized2: runOut.ref.accuracyNormalized2,
-    accuracyFormatted2: runOut.ref.accuracyFormatted2.toDartString(),
-    numSamples: runOut.ref.num_samples,
-    durationMs: runOut.ref.duration_ms,
-    backendName: runOut.ref.backend_name.toDartString(),
-    backendVendor: runOut.ref.backend_vendor.toDartString(),
-    acceleratorName: runOut.ref.accelerator_name.toDartString(),
-    startTime: startTime,
-  );
-
-  _free(runOut);
-
-  return res;
 }
 
 int getQueryCounter() {
