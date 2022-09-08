@@ -4,7 +4,7 @@ build --announce_rc
 build --config=short_logs
 
 # This flag is required by tensorflow
-common --experimental_repo_remote_exec
+common --experimental_repo_remote_exec --experimental_distdir manual-download
 
 # Default options should come above this line.
 
