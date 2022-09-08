@@ -66,6 +66,23 @@ class DeviceInfo {
     final deviceInfo = await DeviceInfoPlugin().androidInfo;
     final deviceNames = DeviceMarketingNames();
 
+    print('deviceInfo.board == ${deviceInfo.board}');
+    print('deviceInfo.manufacturer == ${deviceInfo.manufacturer}');
+    print('deviceInfo.model == ${deviceInfo.model}');
+    print('deviceInfo.androidId == ${deviceInfo.androidId}');
+    print('deviceInfo.brand == ${deviceInfo.brand}');
+    print('deviceInfo.device == ${deviceInfo.device}');
+    print('deviceInfo.display == ${deviceInfo.display}');
+    print('deviceInfo.fingerprint == ${deviceInfo.fingerprint}');
+    print('deviceInfo.hardware == ${deviceInfo.hardware}');
+    print('deviceInfo.host == ${deviceInfo.host}');
+    print('deviceInfo.id == ${deviceInfo.id}');
+    print('deviceInfo.product == ${deviceInfo.product}');
+    print('deviceInfo.supportedAbis == ${deviceInfo.supportedAbis}');
+    print('deviceInfo.tags == ${deviceInfo.tags}');
+    print('deviceInfo.type == ${deviceInfo.type}');
+    print('deviceInfo.version == ${deviceInfo.version}');
+
     return DeviceInfo(
       manufacturer: deviceInfo.manufacturer,
       brand: deviceInfo.brand,
