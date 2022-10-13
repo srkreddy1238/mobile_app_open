@@ -28,6 +28,7 @@
 #include <tvm/runtime/module.h>
 #include <tvm/runtime/registry.h>
 #include "tvm/runtime/c_runtime_api.h"
+#include "tvm/runtime/ndarray.h"
 
 
 class TVMBackendHelper {
@@ -45,12 +46,14 @@ class TVMBackendHelper {
   std::vector<void*> dl_cpu_outputs;
 
   int batchSize_;
+  struct timeval start, end;
 
   /* exposed functions */
 
-  int tvm_config_model(const char *model_path);
-  void get_data_formats();
+  int tvm_config_model(const char *model_path, const char *native_lib_path);
+  void get_data_formats(int input_count);
   size_t get_data_size(const DLTensor& arr, int& dtypeSize);
+  std::map <void*, tvm::runtime::NDArray> buffer_map;
 };
 
 

@@ -25,6 +25,35 @@ const std::string empty_settings = "";
 
 const std::string tvm_settings = R"SETTINGS(
 common_setting {
+  id: "num_threads"
+  name: "Number of threads"
+  value {
+    value: "4"
+    name: "4 threads"
+  }
+  acceptable_value {
+    value: "1"
+    name: "Single thread"
+  }
+  acceptable_value {
+    value: "2"
+    name: "2 threads"
+  }
+  acceptable_value {
+    value: "4"
+    name: "4 threads"
+  }
+  acceptable_value {
+    value: "8"
+    name: "8 threads"
+  }
+  acceptable_value {
+    value: "16"
+    name: "16 threads"
+  }
+}
+
+common_setting {
   id: "configuration"
   name: "Configuration"
   value {
@@ -51,29 +80,39 @@ common_setting {
 }
 
 benchmark_setting {
-  benchmark_id: "OD_uint8"
-  accelerator: "OpenCL"
-  accelerator_desc: "TVM OpenCl Backend"
-  configuration: "TVM"
-  src: "https://github.com/srkreddy1238/mobile_models/raw/tvm/v1_1/tvm/adreno-opencl/model_od.zip"
-}
-
-benchmark_setting {
   benchmark_id: "IC_tpu_uint8"
   accelerator: "OpenCL"
-  accelerator_desc: "TVM OpenCl Backend"
+  accelerator_desc: "TVM OpenCL-Texture Backend"
   configuration: "TVM"
-  src: "https://github.com/srkreddy1238/mobile_models/raw/tvm/v1_1/tvm/adreno-opencl/model_ic.zip"
+  src: "https://github.com/srkreddy1238/mobile_models/raw/tvm/v1.2/fp16-texture/model_ic.zip"
 
 }
 
 benchmark_setting {
   benchmark_id: "IS_uint8"
   accelerator: "OpenCL"
-  accelerator_desc: "TVM OpenCl Backend"
+  accelerator_desc: "TVM OpenCL-Texture Backend"
   configuration: "TVM"
-  src: "https://github.com/srkreddy1238/mobile_models/raw/tvm/v1_1/tvm/adreno-opencl/model_is.zip"
+  src: "https://github.com/srkreddy1238/mobile_models/raw/tvm/v1.2/fp16-texture/model_is.zip"
 }
+
+benchmark_setting {
+  benchmark_id: "LU_float32"
+  accelerator: "OpenCL"
+  accelerator_desc: "TVM OpenCL-Buffer(Vanila TVM) Backend"
+  configuration: "TVM"
+  src: "https://github.com/srkreddy1238/mobile_models/raw/tvm/v1.2/fp16-texture/model_lu.zip"
+}
+
+benchmark_setting {
+  benchmark_id: "OD_uint8"
+  accelerator: "OpenCL"
+  accelerator_desc: "TVM OpenCL-Texture Backend"
+  configuration: "TVM"
+  src: "https://github.com/srkreddy1238/mobile_models/raw/tvm/v1.2/fp16-texture/model_lu.zip"
+}
+
+
 )SETTINGS";
 
 #endif

@@ -26,6 +26,17 @@ config_setting(
 )
 
 cc_library(
+    name = "tvm_models",
+    srcs = [
+        "tvm/mlperf-release-fp16/model_ic.so",
+        "tvm/mlperf-release-fp16/model_is.so",
+        "tvm/mlperf-release-fp16/model_lu.so",
+        #"tvm/mlperf-release-fp16/model_od.so",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "tvm_runtime",
     srcs = [
         "tvm/build-android/libtvm_runtime.so",
@@ -49,6 +60,7 @@ cc_library(
     deps = select({
         ":android_arm64": [
             "tvm_runtime",
+            "tvm_models",
         ],
     }),
 )

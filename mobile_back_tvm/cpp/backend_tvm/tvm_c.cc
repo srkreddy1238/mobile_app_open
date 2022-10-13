@@ -69,13 +69,21 @@ mlperf_backend_ptr_t mlperf_backend_create(
   process_config(configs, backend_data);
   LOG(WARNING) << "TVM Configuration Process Completed.";
 
-  if(backend_data->tvm_config_model(model_path)) {
+  if(backend_data->tvm_config_model(model_path, native_lib_path)) {
     LOG(WARNING) << "TVM Runtime init failed";
     delete backend_data;
     return NULL;
   }
 
-  backend_data->get_data_formats();
+  // Work around to handle multi inputs as TVM doesn't support any meta data.
+  if(strstr(model_path, "model_lu"))
+    backend_data->get_data_formats(3);
+  else
+    backend_data->get_data_formats(1);
+
+  // Few dry runs 
+  tvm::runtime::PackedFunc run = backend_data->mod_.GetFunction("run");
+  for(int i=0;i<50;++i) run();
 
   LOG(WARNING) << "TVM Setup completed successfully";
 
@@ -103,24 +111,27 @@ void mlperf_backend_delete(mlperf_backend_ptr_t backend_ptr) {
 // Run the inference for a sample.
 mlperf_status_t mlperf_backend_issue_query(mlperf_backend_ptr_t backend_ptr) {
   TVMBackendHelper *backend_data = (TVMBackendHelper *)backend_ptr;
-  LOG(WARNING) << "Called: mlperf_backend_issue_query: Call run";
+  //LOG(WARNING) << "Called: mlperf_backend_issue_query: Call run";
   tvm::runtime::PackedFunc run = backend_data->mod_.GetFunction("run");
+  //gettimeofday(&(backend_data->start), NULL);
   run();
-  LOG(WARNING) << "Called: mlperf_backend_issue_query: Run Completed";
+  //gettimeofday(&(backend_data->end), NULL);
+  //LOG(WARNING) << "Elapsed Run:" << ((backend_data->end.tv_sec - backend_data->start.tv_sec) * 1000.0) + ((backend_data->end.tv_usec - backend_data->start.tv_usec)/1000.0);
+  //LOG(WARNING) << "Called: mlperf_backend_issue_query: Run Completed";
   return MLPERF_SUCCESS;
 }
 
 // Flush the staged queries immediately.
 mlperf_status_t mlperf_backend_flush_queries(mlperf_backend_ptr_t backend_ptr) {
   TVMBackendHelper *backend_data = (TVMBackendHelper *)backend_ptr;
-  LOG(WARNING) << "Called: mlperf_backend_flush_queries";
+  //LOG(WARNING) << "Called: mlperf_backend_flush_queries";
   return MLPERF_SUCCESS;
 }
 
 // Return the number of inputs of the model.
 int32_t mlperf_backend_get_input_count(mlperf_backend_ptr_t backend_ptr) {
   TVMBackendHelper *backend_data = (TVMBackendHelper *)backend_ptr;
-  LOG(WARNING) << "Called: mlperf_backend_get_input_count";
+  //LOG(WARNING) << "Called: mlperf_backend_get_input_count";
   return backend_data->input_format_.size();
 }
 
@@ -128,7 +139,7 @@ int32_t mlperf_backend_get_input_count(mlperf_backend_ptr_t backend_ptr) {
 mlperf_data_t mlperf_backend_get_input_type(mlperf_backend_ptr_t backend_ptr,
                                             int32_t i) {
   TVMBackendHelper *backend_data = (TVMBackendHelper *)backend_ptr;
-  LOG(WARNING) << "Called: mlperf_backend_get_input_type";
+  //LOG(WARNING) << "Called: mlperf_backend_get_input_type";
   return backend_data->input_format_[i];
 }
 
@@ -137,25 +148,33 @@ mlperf_status_t mlperf_backend_set_input(mlperf_backend_ptr_t backend_ptr,
                                          int32_t batchIndex, int32_t i,
                                          void *data) {
   TVMBackendHelper *backend_data = (TVMBackendHelper *)backend_ptr;
-  LOG(WARNING) << "Called: mlperf_backend_set_input:" << batchIndex << " i:" << i;
+  //LOG(WARNING) << "Called: mlperf_backend_set_input:" << batchIndex << " i:" << i;
   int dtypeSize = 1;
   int bufsize = backend_data->get_data_size(*backend_data->dl_inputs[i], dtypeSize);
-  TVMArrayCopyFromBytes(backend_data->dl_inputs[i], data, dtypeSize*bufsize);
-  LOG(WARNING) << "Called: mlperf_backend_set_input: Completed";
+
+  auto narr = backend_data->buffer_map[data];
+  std::vector<int64_t> in_shape;
+  in_shape.assign(backend_data->dl_inputs[i]->shape, backend_data->dl_inputs[i]->shape + backend_data->dl_inputs[i]->ndim);
+  auto ninput = narr.CreateView(in_shape, backend_data->dl_inputs[i]->dtype);
+  tvm::runtime::PackedFunc set_input = backend_data->mod_.GetFunction("set_input_zero_copy");
+  set_input(i, ninput);
+
+  //TVMArrayCopyFromBytes(backend_data->dl_inputs[i], data, dtypeSize*bufsize);
+  //LOG(WARNING) << "Called: mlperf_backend_set_input: Completed";
   return MLPERF_SUCCESS;
 }
 
 // Return the number of outputs for the model.
 int32_t mlperf_backend_get_output_count(mlperf_backend_ptr_t backend_ptr) {
   TVMBackendHelper *backend_data = (TVMBackendHelper *)backend_ptr;
-  LOG(WARNING) << "Called: mlperf_backend_get_output_count";
+  //LOG(WARNING) << "Called: mlperf_backend_get_output_count";
   return backend_data->output_format_.size();
 }
 // Return the type of ith output.
 mlperf_data_t mlperf_backend_get_output_type(mlperf_backend_ptr_t backend_ptr,
                                              int32_t i) {
   TVMBackendHelper *backend_data = (TVMBackendHelper *)backend_ptr;
-  LOG(WARNING) << "Called: mlperf_backend_get_output_type";
+  //LOG(WARNING) << "Called: mlperf_backend_get_output_type";
   return backend_data->output_format_[i];
 }
 
@@ -163,32 +182,58 @@ mlperf_data_t mlperf_backend_get_output_type(mlperf_backend_ptr_t backend_ptr,
 mlperf_status_t mlperf_backend_get_output(mlperf_backend_ptr_t backend_ptr,
                                           uint32_t batchIndex, int32_t i,
                                           void **data) {
-  LOG(WARNING) << "Called: mlperf_backend_get_output:" << batchIndex << " i:" << i;
+  //LOG(WARNING) << "Called: mlperf_backend_get_output:" << batchIndex << " i:" << i;
   TVMBackendHelper *backend_data = (TVMBackendHelper *)backend_ptr;
 
-  LOG(WARNING) << "Called: mlperf_backend_get_output: TVM Copy call";
+  //LOG(WARNING) << "Called: mlperf_backend_get_output: TVM Copy call";
   int dtypeSize = 1;
   int bufsize = backend_data->get_data_size(*backend_data->dl_outputs[i], dtypeSize);
-  TVMArrayCopyToBytes(backend_data->dl_outputs[i], backend_data->dl_cpu_outputs[i],
-      dtypeSize*bufsize);
-  LOG(WARNING) << "Called: mlperf_backend_get_output: TVM Copy Completed";
+  /*
+  //TVMArrayCopyToBytes(backend_data->dl_outputs[i], backend_data->dl_cpu_outputs[i],
+  //    dtypeSize*bufsize);
+  //gettimeofday(&(backend_data->end), NULL);
+  //LOG(WARNING) << "Elapsed Output:" << ((backend_data->end.tv_sec - backend_data->start.tv_sec) * 1000.0) + ((backend_data->end.tv_usec - backend_data->start.tv_usec)/1000.0);
+  //LOG(WARNING) << "Called: mlperf_backend_get_output: TVM Copy Completed";
+  */
+
+  tvm::runtime::PackedFunc get_output = backend_data->mod_.GetFunction("get_output");
+  tvm::runtime::NDArray y = get_output(i);
+  
+  //LOG(WARNING) << "Called: mlperf_backend_get_output: memcpy";
+  memcpy(backend_data->dl_cpu_outputs[i], y.GetNativePtr(), dtypeSize*bufsize);
+
+  //LOG(WARNING) << "Called: mlperf_backend_get_output: Assign";
   *data = backend_data->dl_cpu_outputs[i];
-  LOG(WARNING) << "Called: mlperf_backend_get_output: Returning";
+
+  //LOG(WARNING) << "Called: mlperf_backend_get_output: Returning:" << *data;
   return MLPERF_SUCCESS;
 }
 
 void *mlperf_backend_get_buffer(size_t n) {
-  LOG(WARNING) << "Called: mlperf_backend_get_buffer:" << n;
+  /*
+  //LOG(WARNING) << "Called: mlperf_backend_get_buffer:" << n;
   void * ptr =  malloc(n);
-  LOG(WARNING) << "Malloc Address:" << ptr;
-  memset(ptr, 0x00, n);
-  LOG(WARNING) << "Return get_buffer";
+  //LOG(WARNING) << "Malloc Address:" << ptr;
+  //memset(ptr, 0x00, n);
+  //LOG(WARNING) << "Return get_buffer";
   return ptr;
+  */
+  std::vector<int64_t> shape{1, (int64_t)n/4};
+  //LOG(WARNING) << "Allocate NDArray:" << n << "\n";
+  auto narr = tvm::runtime::NDArray::Empty(shape, {kDLFloat, 32, 1}, {kDLOpenCL, 0});
+  //LOG(WARNING) << "Get Nptr\n";
+  void * nptr = narr.GetNativePtr();
+  //LOG(WARNING) << "Memset\n";
+  //memset(nptr, 0x00, n);
+  //LOG(WARNING) << "Return\n";
+  backend_data_g->buffer_map.insert(std::pair<void*, tvm::runtime::NDArray>(nptr, narr));
+
+  return nptr;
 }
 
 void mlperf_backend_release_buffer(void *p) {
-  LOG(WARNING) << "Called: mlperf_backend_release_buffer";
-  free(p);
+  //LOG(WARNING) << "Called: mlperf_backend_release_buffer";
+  //free(p);
 }
 
 #ifdef __cplusplus

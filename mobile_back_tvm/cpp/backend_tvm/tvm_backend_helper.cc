@@ -24,12 +24,26 @@
 #include "tvm_backend_helper.h"
 #include "tensorflow/core/platform/logging.h"
 
-int TVMBackendHelper::tvm_config_model(const char *model_path) {
+int TVMBackendHelper::tvm_config_model(const char *model_path, const char *native_lib_path) {
   void* lib_handle_{nullptr};
   LOG(INFO) << "TVM Backend Helper: Load Model";
   /* Load Model */
+  std::string model_lib_name;
+  if(strstr(model_path, "model_ic"))
+    model_lib_name = "/model_ic.so";
+  else if(strstr(model_path, "model_is"))
+    model_lib_name = "/model_is.so";
+  else if(strstr(model_path, "model_lu"))
+    model_lib_name = "/model_lu.so";
+  else if(strstr(model_path, "model_od"))
+    model_lib_name = "/model_od.so";
+  else {
+    LOG(ERROR) << "Unrecognized model :" + std::string(model_path);
+    return -1;
+  }
+
   tvm::runtime::Module mod_dylib =
-        tvm::runtime::Module::LoadFromFile((std::string(model_path) + "/model.so").c_str()) ;
+        tvm::runtime::Module::LoadFromFile((std::string(native_lib_path) + model_lib_name).c_str()) ;
 
 
   LOG(INFO) << "TVM Backend Helper: Model Loaded";
@@ -67,7 +81,6 @@ int TVMBackendHelper::tvm_config_model(const char *model_path) {
 
 
   /* Initialize Graph Runtime */
-  int dtype_code = kDLFloat;
   int dtype_bits = 32;
   int dtype_lanes = 1;
   int device_type = device_;
@@ -106,11 +119,12 @@ size_t TVMBackendHelper::get_data_size(const DLTensor& arr, int& dtypeSize) {
     size *= static_cast<size_t>(arr.shape[i]);
   }
   dtypeSize = (arr.dtype.bits * arr.dtype.lanes + 7) / 8;
+  //LOG(INFO) << "SRK Data align:" << arr.dtype.bits << " :" << arr.dtype.lanes;
   return size;
 }
 
 
-void TVMBackendHelper::get_data_formats() {
+void TVMBackendHelper::get_data_formats(int input_count) {
   int num_inputs = mod_.GetFunction("get_num_inputs")();
   int num_outputs = mod_.GetFunction("get_num_outputs")();
   int dtypeSize = 1;
@@ -118,14 +132,19 @@ void TVMBackendHelper::get_data_formats() {
   LOG(INFO) << "Num Outputs:" << num_outputs;
 
   DLTensor* x;
+  int bufSize;
   tvm::runtime::PackedFunc get_input = mod_.GetFunction("get_input");
-  x = get_input(0);
-  int bufSize = get_data_size(*x, dtypeSize);
-  input_format_.push_back(
-      {mlperf_data_t::Type::Float32, bufSize});
-  LOG(INFO) << "Input Size:" << bufSize;
+  for (int i=0;i<input_count;++i) {
+    x = get_input(i);
+    bufSize = get_data_size(*x, dtypeSize);
+    input_format_.push_back(
+        {mlperf_data_t::Type::Float32, bufSize});
+    LOG(INFO) << "Input Size:" << bufSize;
 
-  dl_inputs.push_back(x);
+    dl_inputs.push_back(x);
+
+    //LOG(WARNING) << "SRK: Input Is Alligned:" << tvm::runtime::NDArray::AbilityOfZeroCopyForDLTensor(x, {kDLOpenCL, 0});
+  }
 
   DLTensor* y;
   for (int i=0;i<num_outputs;++i) {
